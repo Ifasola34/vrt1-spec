@@ -40,8 +40,13 @@ def _stable_vectors_after_regen() -> dict[str, str]:
     """Re-run the generator IN PLACE and return {filename: contents}
     for each vector file. The generator is deterministic (fixed
     privkeys + fixed aux_rand) so this is safe to do in CI.
+
+    Deletes existing vectors first so that a partial generator failure
+    cannot produce false passes (missing files surface as inventory
+    mismatches rather than silently matching the old copies).
     """
-    # Run the generator as a subprocess so it doesn't pollute test imports.
+    for p in VECTORS_DIR.glob("*.json"):
+        p.unlink()
     result = subprocess.run(
         [sys.executable, "-m", "tests.generate_vectors"],
         capture_output=True, text=True, cwd=VECTORS_DIR.parent,

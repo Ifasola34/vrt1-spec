@@ -90,7 +90,15 @@ def _write(name: str, obj: dict) -> None:
 
 def _deterministic_sign_attestation(att: Attestation, key: OracleKey) -> SignedAttestation:
     """Wrap sign_attestation with fixed aux_rand so the resulting
-    signature is byte-identical across runs."""
+    signature is byte-identical across runs.
+
+    WARNING: this bypasses sign_attestation() and calls schnorr_sign
+    directly. If sign_attestation ever changes its internal signing
+    flow (e.g. adds nonce derivation or pre-hashing), this helper
+    will diverge and the stability test will correctly fail — but the
+    root cause will be here, not in the reference implementation.
+    The same applies to gen_agent_action and gen_kwh_measurement below.
+    """
     from veritas.crypto import schnorr_sign
     if att.oracle != key.xonly_pubkey_hex:
         raise ValueError("attestation.oracle does not match key")

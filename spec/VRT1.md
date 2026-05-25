@@ -124,7 +124,12 @@ A contiguous time window during which an oracle's attestations are
 accumulated. At epoch close, all attestations in that epoch are
 arranged into a Merkle tree (Section 4) and the root is committed to
 Bitcoin (Section 5). Epochs are identified by a monotonically
-increasing 64-bit integer per oracle.
+increasing unsigned 64-bit integer per oracle (0 through 2^64 − 1).
+
+An oracle MUST NOT close an epoch with zero attestations. An epoch
+with no attestations has no Merkle tree, no checkpoint, and no anchor
+transaction. Consumers that encounter a checkpoint with `count: 0`
+MUST reject it.
 
 ### 2.3 Attestation
 
@@ -155,11 +160,11 @@ An *inference attestation* is a JSON object with the following fields:
 | Field       | Type    | Required | Description                                  |
 |-------------|---------|----------|----------------------------------------------|
 | `model`     | string  | Yes      | Stable identifier of the inference model.    |
-| `input_hash`| string  | Yes      | Lowercase hex SHA-256 of the canonical input.|
-| `output`    | any     | Yes      | JSON-serializable inference result.          |
-| `ts`        | integer | Yes      | Unix seconds when the attestation was produced. |
-| `epoch`     | integer | Yes      | Epoch number this attestation belongs to.    |
-| `oracle`    | string  | Yes      | 64-char lowercase hex of oracle's x-only pubkey. |
+| `input_hash`| string  | Yes      | Lowercase hex SHA-256 of the canonical input. MUST be exactly 64 lowercase hex characters (`[0-9a-f]{64}`). |
+| `output`    | any     | Yes      | JSON-serializable inference result. MUST NOT be `null`. An inference that produces no output SHOULD use an empty object `{}`. |
+| `ts`        | integer | Yes      | Unix seconds when the attestation was produced. Verifiers SHOULD reject attestations where `ts` exceeds the current wall clock by more than 300 seconds. |
+| `epoch`     | integer | Yes      | Epoch number. MUST be a non-negative integer that fits in an unsigned 64-bit integer (0 through 2^64 − 1). |
+| `oracle`    | string  | Yes      | 64-char lowercase hex of oracle's x-only pubkey. MUST be exactly 64 lowercase hex characters. |
 | `v`         | integer | Yes      | Protocol version. MUST be `1`.               |
 | `nonce`     | string  | No       | Optional random hex for per-attestation unlinkability. |
 
@@ -168,7 +173,8 @@ Implementations:
 - **MUST** include all required fields.
 - **MUST** omit `nonce` from the payload when its value is the empty
   string (otherwise the digest of an "absent nonce" attestation
-  differs across implementations).
+  differs across implementations). A nonce containing only
+  whitespace is a valid non-empty nonce and MUST be included.
 - **MUST NOT** include any fields not listed above when computing the
   digest. Future extension fields are reserved for protocol version
   `v` > 1 and require updating this specification.
@@ -246,6 +252,10 @@ consists of:
 | `size`       | integer        | Total leaves `N` in the tree.        |
 | `index`      | integer        | Position `i` of the leaf in the tree. |
 
+For a tree of size 1, the proof has no siblings
+(`siblings=[], directions=[]`). The root is `d(0x00 || leaf)` and
+no further hashing is required.
+
 ### 4.3 Verification
 
 To verify an inclusion proof, an implementation MUST:
@@ -303,7 +313,7 @@ transaction. The exact payload (the bytes pushed after the
 | `tag`        | 4     | ASCII `VRT1` (`0x56 0x52 0x54 0x31`).          |
 | `version`    | 1     | Protocol version. MUST be `0x01` for VRT1.     |
 | `epoch`      | 8     | Big-endian unsigned 64-bit integer.            |
-| `leaf_count` | 4     | Big-endian unsigned 32-bit integer.            |
+| `leaf_count` | 4     | Big-endian unsigned 32-bit integer. Implementations MUST NOT produce epochs with more than 2^32 − 1 attestations. |
 | `merkle_root`| 32    | Raw Merkle root bytes (NOT hex-encoded).       |
 
 Total: **49 bytes**, which fits in a single direct push opcode
@@ -404,6 +414,10 @@ If `anchor_txid` is `null`, no Bitcoin anchor was produced for that
 epoch. Implementations consuming the checkpoint MUST NOT treat such
 checkpoints as Bitcoin-anchored.
 
+**Note:** Unlike attestation events (Section 7), checkpoint content
+is stored as raw JSON rather than base64 because checkpoint payloads
+are small and useful for relay-side filtering on structured fields.
+
 ### 6.3 Recommended tags
 
 Implementations SHOULD include the following additional tags for
@@ -476,9 +490,7 @@ or arbitrary semantic actions.
 | `ts`             | integer | Yes      | Unix seconds.                            |
 | `parent_action`  | string  | No       | Action id this action references (vouch/dispute target). |
 | `v`              | integer | Yes      | Protocol version. MUST be `1`.           |
-| `nonce`          | string  | No       | Optional random hex for unlinkability.   |
 
-Same omission rules as Section 3.1 apply: empty-string `nonce` and
 `null` `parent_action` MUST be omitted from the canonical payload.
 Empty-string `parent_action` MUST be normalized to omitted (round-3
 fix; otherwise two semantically-equivalent no-parent actions produce
@@ -624,6 +636,12 @@ A VRT1 L402 macaroon is a JSON object:
 
 The macaroon is URL-safe base64-encoded for transport.
 
+**Note:** This is a simplified JSON structure, not the chained-HMAC
+binary format used by libmacaroons / pymacaroons. Third parties
+cannot add caveats without the server secret (no additive
+attenuation). Implementations that require caveat delegation SHOULD
+use standard macaroons and adapt the authorize algorithm accordingly.
+
 Implementations:
 
 - **MUST** include at least one `exp=<unix_ts>` caveat. The
@@ -709,10 +727,11 @@ In order:
    verification (Section 4.3). Otherwise: `merkle_ok := False`.
 
 4. **Checkpoint event (Section 6), if supplied.**
-   - **REQUIRE** that `merkle_proof` is also supplied. Without a
-     proof, the digest cannot be bound to the checkpoint's root,
-     so accepting the checkpoint as "verified" would be an auth
-     gap. If not supplied: `checkpoint_ok := False`.
+   - **REQUIRE** that `merkle_proof` is also supplied AND that
+     the Merkle proof verified successfully (step 3 passed).
+     Without a valid proof, the digest cannot be bound to the
+     checkpoint's root. If not supplied or failed:
+     `checkpoint_ok := False`.
    - Verify the Nostr event signature.
    - Verify `event.pubkey == attestation.oracle`.
    - Parse the signed content as canonical JSON; extract `epoch`,
@@ -872,9 +891,10 @@ The canonical implementation of VRT1 is:
 - **kWh attestation library:** https://github.com/Ifasola34/vrt1-kwh
 - **L402 paywall library:** https://github.com/Ifasola34/l402-py
 - **End-to-end demo:** https://github.com/Ifasola34/vrt1-demo
+- **Protocol specification:** https://github.com/Ifasola34/vrt1-spec
 
-Total LOC across all 6 repos: ~7,500 lines of Python + ~400 lines of
-tests. All MIT-licensed.
+Total LOC across all 7 repos: ~8,000 lines of library code + ~8,600
+lines of tests. All MIT-licensed.
 
 ## Appendix B — Open Questions / Future Work
 
