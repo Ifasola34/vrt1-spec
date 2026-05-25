@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vrt1-spec"
+version = "0.1.0"
+description = "Formal protocol specification for VRT1 (the VERITAS Bitcoin-anchored attestation protocol). Includes the spec document, canonical test vectors, and a stability test that catches accidental protocol changes."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Ifasola34"},
+]
+keywords = ["bitcoin", "nostr", "veritas", "specification", "protocol", "l402"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3 :: Only",
+]
+dependencies = [
+    # The vectors are generated USING the reference implementation; this
+    # keeps them grounded in working code. If veritas changes its wire
+    # format, regeneration produces different bytes and the stability
+    # test catches it.
+    "veritas @ git+https://github.com/Ifasola34/veritas.git",
+    "vrt1-agents @ git+https://github.com/Ifasola34/vrt1-agents.git",
+    "vrt1-kwh @ git+https://github.com/Ifasola34/vrt1-kwh.git",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0"]
+
+[project.urls]
+"VERITAS reference impl" = "https://github.com/Ifasola34/veritas"
+"vrt1-demo"              = "https://github.com/Ifasola34/vrt1-demo"
+
+[tool.setuptools]
+py-modules = []
+
+[tool.setuptools.packages.find]
+include = ["tests*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

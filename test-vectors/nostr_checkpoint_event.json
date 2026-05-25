@@ -1,0 +1,38 @@
+{
+  "content_parsed": {
+    "anchor_txid": "abababababababababababababababababababababababababababababababab",
+    "count": 5,
+    "epoch": 7,
+    "root": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+  },
+  "description": "Kind-30079 checkpoint event committing to epoch + root + count + anchor_txid in its signed content.",
+  "event": {
+    "content": "{\"anchor_txid\":\"abababababababababababababababababababababababababababababababab\",\"count\":5,\"epoch\":7,\"root\":\"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\"}",
+    "created_at": 1700000060,
+    "id": "b75428fe7d815ef3bbd1984feedffebfaab4abdac3c85eb14b749517b138b646",
+    "kind": 30079,
+    "pubkey": "4f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa",
+    "sig": "b43f54ec6fb61f6f059d75ba0b93433d55c58f86d5bd8b75f7d68c46c9f657f2b24ad8b5af653d54c9b788cf30ef4d7b05dad46e7c97f6593a3c77588280bb2a",
+    "tags": [
+      [
+        "d",
+        "checkpoint:7"
+      ],
+      [
+        "v",
+        "VRT1.1"
+      ],
+      [
+        "root",
+        "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+      ],
+      [
+        "anchor",
+        "abababababababababababababababababababababababababababababababab"
+      ]
+    ]
+  },
+  "spec_section": "6",
+  "verify_event_id_expected": true,
+  "verify_signature_expected": true
+}
