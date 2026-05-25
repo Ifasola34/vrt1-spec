@@ -646,7 +646,12 @@ Implementations:
 
 - **MUST** include at least one `exp=<unix_ts>` caveat. The
   reference implementation rejects macaroons without an `exp=`
-  caveat at `authorize` time (round-2 hardening).
+  caveat at `authorize` time (round-2 hardening). Caveats are
+  UTF-8 strings of the form `key=value` where `key` is a
+  non-empty ASCII identifier and `value` is the remainder after
+  the first `=`. Keys are case-sensitive. This specification
+  defines only `exp`; additional caveat keys (e.g., `scope`,
+  `rate`) are reserved for VRT1.2.
 - **MUST** use HMAC-SHA-256 with a server-only secret of at least
   16 octets.
 - **MUST** use `hmac.compare_digest` (or equivalent constant-time
@@ -849,6 +854,10 @@ This specification ships with the following test vectors under
 Implementations of VRT1 SHOULD reproduce these vectors byte-for-byte
 from the included payloads, and SHOULD ship a test that asserts
 their implementation can verify each.
+
+These vectors cover positive-path round-trips. Negative test vectors
+(e.g., null output, oversized epoch, malformed hex, invalid
+signatures) are reserved for a future conformance test suite.
 
 ---
 

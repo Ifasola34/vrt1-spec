@@ -81,11 +81,12 @@ def test_all_vectors_exist():
 
 def test_vectors_are_byte_stable():
     """Regenerated vectors must match the checked-in copies byte-for-byte."""
-    # Snapshot the checked-in copies BEFORE regeneration.
+    # Snapshot the checked-in copies BEFORE the helper deletes+regenerates.
     before = {
         p.name: p.read_text()
         for p in sorted(VECTORS_DIR.glob("*.json"))
     }
+    assert before, "no checked-in vectors found to compare against"
     after = _stable_vectors_after_regen()
     assert set(before.keys()) == set(after.keys()), (
         "file inventory changed during regeneration"
