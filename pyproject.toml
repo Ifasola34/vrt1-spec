@@ -23,7 +23,7 @@ dependencies = [
     # keeps them grounded in working code. If veritas changes its wire
     # format, regeneration produces different bytes and the stability
     # test catches it.
-    "veritas @ git+https://github.com/Ifasola34/veritas.git",
+    "veritas @ git+https://github.com/Ifasola34/veritas.git@v0.1.0",
     "vrt1-agents @ git+https://github.com/Ifasola34/vrt1-agents.git",
     "vrt1-kwh @ git+https://github.com/Ifasola34/vrt1-kwh.git",
 ]
