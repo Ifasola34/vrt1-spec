@@ -62,7 +62,7 @@ def _stable_vectors_after_regen() -> dict[str, str]:
 
 
 def test_all_vectors_exist():
-    """The 7 vector files declared in spec/VRT1.md Section 13 must exist."""
+    """The 8 vector files declared in spec/VRT1.md Section 13 must exist."""
     expected = {
         "attestation.json",
         "merkle.json",
@@ -71,6 +71,7 @@ def test_all_vectors_exist():
         "nostr_checkpoint_event.json",
         "agent_action.json",
         "kwh_measurement.json",
+        "key_registry_snapshot.json",
     }
     actual = {p.name for p in VECTORS_DIR.glob("*.json")}
     assert actual == expected, (
