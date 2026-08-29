@@ -108,6 +108,30 @@ config files, CLI arguments), implementations:
 - **MUST NOT** accept hex with whitespace, `0x` prefixes, or other
   non-`[0-9a-fA-F]` characters.
 
+**Scope: normalization applies only to values already known to be
+hex-encoded bytes.** Every other string in a canonical payload is
+carried **byte-identical**, whatever it looks like. A value is a
+candidate for normalization because its field is declared to hold
+hex bytes, never because its contents happen to resemble hex.
+
+This is stated as a default rather than as a pair of categories
+deliberately. An implementation that enumerates what to normalize and
+what to preserve has nothing to say the first time it meets a string
+belonging to neither list, and a canonicalizer with nothing to say is
+a canonicalizer that guesses. Two implementations then guess
+differently and produce different digests for the same record, which
+is the failure this section exists to prevent.
+
+Normalizing is the special case and **MUST** be justified per field;
+preserving is the default and needs no justification. Concretely, an
+asset identifier such as
+`eip155:1/erc20:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48` carries a
+mixed-case checksum, and an unresolved or vendor-scoped identifier such
+as `unresolved:VVV@1` carries a symbol whose casing an implementation
+cannot prove is redundant. Neither is a hex byte string, so neither is
+touched, and no rule has to be extended when the next such format
+appears.
+
 ---
 
 ## 2. Terminology
