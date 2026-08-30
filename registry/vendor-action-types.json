@@ -1,0 +1,44 @@
+{
+  "$comment": "Directory of vendor-defined VRT1 action types. ENTRIES ARE POINTERS, NEVER COPIES. A declaration lives in exactly one place: the operator's own repository. VRT1 records where it is and what it hashed to on the listing date, so that a reader holding only an action_type string can find the declaration rather than having to be told where it is.",
+  "version": 1,
+  "spec_section": "8.6",
+  "updated": "2026-08-30",
+  "why_pointers_not_copies": "Two copies of a truth is none. If a declaration lived here as well as in the operator's repository, the two would eventually diverge and a reader would have to decide which to trust. One file, one hash, one place to check.",
+  "listing_is_not_endorsement": "Listing records that a type exists, where its declaration is, and what those bytes hashed to when checked. It says nothing about whether the operator's verdicts are correct, whether the service is available, or whether the declaration describes what the service does by default. Same boundary as anchoring (Section 12.2).",
+  "verification": {
+    "procedure": "Fetch the pinned URL. Hash the bytes exactly as served. Compare to sha256 and bytes below.",
+    "MUST_NOT": "Do not parse the JSON and re-serialise it before hashing. A re-serialisation is a different byte string and its digest matches nothing anyone has published.",
+    "worked_example": "The Insight declaration below is 7006 bytes as served. Parsed and re-emitted with two-space indentation it becomes 7386 bytes, because the source array formatting is not what a serialiser produces. Both are valid JSON with identical content and neither digest equals the other.",
+    "pinned_revisions": "Each declaration URL names an immutable revision, so the bytes cannot change under a reader. An operator revising a declaration produces a new revision and a new entry; this file records what was checked and when, not what is current elsewhere."
+  },
+  "entries": [
+    {
+      "action_type": "insight.oracle-safety-check",
+      "operator": "Insight",
+      "operator_domain": "oracleinsight.xyz",
+      "schema_version_pinned": 3,
+      "declaration": {
+        "url": "https://raw.githubusercontent.com/imokokok/Insight/f88acf87922f8c59abfaa3dde69d68a1373ac318/scripts/vrt1-e2e-prototype/registration/scale-declaration.json",
+        "revision": "f88acf87922f8c59abfaa3dde69d68a1373ac318",
+        "sha256": "035144d0456d87066935a507ce8d3ed8bde8ea8c68d85fb64001c0cb8861594d",
+        "bytes": 7006,
+        "fetched_and_verified": "2026-08-30"
+      },
+      "mirrors": [
+        {
+          "url": "https://www.oracleinsight.xyz/.well-known/vrt1-scale-declaration.json",
+          "sha256": "035144d0456d87066935a507ce8d3ed8bde8ea8c68d85fb64001c0cb8861594d",
+          "bytes": 7006,
+          "fetched_and_verified": "2026-08-30",
+          "note": "Byte-identical to the pinned revision. Not itself pinned, so a reader who needs immutability should use the revision URL."
+        }
+      ],
+      "declares": "Per-field integer scale for all 27 signed fields, and both policy constants (requiredParticipantCount, requiredSourceGroupCount) with the comparison the engine performs and the schema version each became signed at.",
+      "deployment_note": "The declaration's own deployment_default records that schema v3 is opt-in and that schema v1, which has eleven fields and no gates, remains the service default. The pin describes the type, not the operator's default traffic.",
+      "anchored_records": [
+        {"block": 964367, "txid": "750937dacd0e381a72901cd6084e47c4aab4b4b98c70834a24f3f2c845bd72b5"},
+        {"block": 964535, "txid": "b338174f10e992b05157aae1f60e704ac1ec997b949ae8ea002acae77f0a0272"}
+      ]
+    }
+  ]
+}

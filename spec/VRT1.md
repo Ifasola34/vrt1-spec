@@ -702,6 +702,51 @@ implementation as a vendor-namespaced record. It is registered
 un-namespaced because every attester that publishes a key registry has
 the same problem, and two records that mean the same thing should not
 fail to interoperate over a prefix.*
+### 8.6 Vendor action type directory
+
+Section 8.4 permits an implementation to define its own action type,
+and most will. That leaves a gap at the other end: a consumer holding
+one of those records has an `action_type` string and nothing else, and
+no way to find out what its fields mean without being told where to
+look. Fixing the meaning of a type is not the same as making it
+findable.
+
+`registry/vendor-action-types.json` lists vendor-defined types with a
+pointer to each one's declaration.
+
+**Entries are pointers. This specification does not copy
+declarations.** A declaration lives in exactly one place, the
+operator's own repository, because two copies of a truth is none: if
+the same document lived here as well, the two would eventually diverge
+and a reader would have to decide which to trust. One file, one hash,
+one place to check.
+
+Each entry **MUST** carry:
+
+- the `action_type` string exactly as it appears in records,
+- the operator and the domain it publishes under,
+- a declaration URL naming an **immutable revision**, so the bytes
+  cannot change under a reader,
+- the `sha256` and byte count of the bytes served at that revision,
+- the date VRT1 fetched and verified them.
+
+A verifier **MUST** hash the bytes exactly as served, and **MUST NOT**
+parse the declaration and re-serialize it before hashing. A
+re-serialization is a different byte string whose digest matches
+nothing anyone has published: the first entry in the directory is 7006
+bytes as served and 7386 bytes re-emitted with two-space indentation,
+identical in content and neither digest equal to the other.
+
+An operator revising a declaration produces a new revision and a new
+entry. The directory records what was checked and when; it does not
+track what is current somewhere else.
+
+**Listing is not endorsement.** It records that a type exists, where
+its declaration is, and what those bytes hashed to on a date. It says
+nothing about whether the operator's verdicts are correct, whether the
+service is available, or whether the declaration describes what that
+service does by default. That is the same boundary Section 12.2 draws
+around anchoring, applied one level up.
 ---
 
 ## 9. kWh Measurements (kind 1991)
@@ -1014,6 +1059,10 @@ This specification ships with the following test vectors under
 | `agent_action.json`               | Section 8 (kind 1990 sign+verify) |
 | `kwh_measurement.json`            | Section 9 (kind 1991 sign+verify) |
 | `key_registry_snapshot.json`      | Section 8.5 (chained snapshots + 5 negatives) |
+
+The vendor action type directory (Section 8.6) lives at
+`registry/vendor-action-types.json`, outside `test-vectors/`, because it
+records external pointers rather than reproducible vectors.
 
 Implementations of VRT1 SHOULD reproduce these vectors byte-for-byte
 from the included payloads, and SHOULD ship a test that asserts
